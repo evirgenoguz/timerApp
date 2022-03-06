@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/stopwatchFragment"
+        android:icon="@drawable/ic_baseline_av_timer"
+        android:title="Stopwatch"/>
+
+    <item
+        android:id="@+id/timerFragment"
+        android:icon="@drawable/ic_baseline_timer"
+        android:title="Timer"/>
+
+    <item
+        android:id="@+id/historyFragment"
+        android:icon="@drawable/ic_baseline_history_edu"
+        android:title="History"/>
+
+
+</menu>
