@@ -6,13 +6,20 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.evirgenoguz.fittimer.R
+import com.evirgenoguz.fittimer.adapters.ModeAdapter
 import com.evirgenoguz.fittimer.databinding.FragmentStopwatchBinding
+import com.evirgenoguz.fittimer.models.ModeModel
 
 class StopwatchFragment : Fragment() {
 
     private var _binding: FragmentStopwatchBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var adapter: ModeAdapter
+
+    private val modeList: ArrayList<ModeModel> = ArrayList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -21,6 +28,22 @@ class StopwatchFragment : Fragment() {
         // Inflate the layout for this fragment
         _binding = FragmentStopwatchBinding.inflate(inflater, container, false)
         val view = binding.root
+
+
+        modeList.add(ModeModel("00:45", "Plank"))
+        modeList.add(ModeModel("00:15", "Dinlenme"))
+        modeList.add(ModeModel("00:45", "Russian Twist"))
+        modeList.add(ModeModel("00:15", "Dinlenme"))
+        modeList.add(ModeModel("00:15", "Flutter"))
+
+
+        val recyclerView = binding.modeRecyclerView
+        recyclerView.layoutManager = LinearLayoutManager(activity)
+
+        adapter = ModeAdapter(modeList)
+        recyclerView.adapter
+
+
         return view
     }
 
