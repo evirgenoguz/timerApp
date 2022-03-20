@@ -11,33 +11,36 @@ import com.evirgenoguz.fittimer.R
 import com.evirgenoguz.fittimer.databinding.ModeCardBinding
 import com.evirgenoguz.fittimer.models.ModeModel
 
-class ModeAdapter(private val modeList: List<ModeModel>): RecyclerView.Adapter<ModeAdapter.ModeViewHolder>() {
+class ModeAdapter(): RecyclerView.Adapter<ModeAdapter.ModeViewHolder>() {
 
-    inner class ModeViewHolder(itemView: View): RecyclerView.ViewHolder(itemView){
+    private val modeList = arrayListOf<ModeModel>()
 
-        var itemTime: TextView
-        var itemDescription: TextView
 
-        init{
-            itemTime = itemView.findViewById(R.id.itemTime)
-            itemDescription = itemView.findViewById(R.id.itemDescription)
+    class ModeViewHolder(private val modeCardBinding: ModeCardBinding): RecyclerView.ViewHolder(modeCardBinding.root){
+        fun bind(mode: ModeModel){
+            modeCardBinding.modeItem = mode
         }
     }
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ModeAdapter.ModeViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.mode_card, parent, false)
-        return ModeViewHolder(view)
+        val modeCardBinding = ModeCardBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ModeViewHolder(modeCardBinding)
     }
 
     override fun onBindViewHolder(holder: ModeAdapter.ModeViewHolder, position: Int) {
-        holder.itemTime.text = modeList[position].time
-        holder.itemDescription.text = modeList[position].description
+        holder.bind(modeList[position])
     }
 
     override fun getItemCount(): Int {
         return modeList.size
 
+    }
+
+    fun updateList(updatedList: List<ModeModel>){
+        modeList.clear()
+        modeList.addAll(updatedList)
+        notifyDataSetChanged()
     }
 
 
