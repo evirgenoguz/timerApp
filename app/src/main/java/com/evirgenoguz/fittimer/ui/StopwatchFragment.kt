@@ -1,17 +1,27 @@
 package com.evirgenoguz.fittimer.ui
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.os.SystemClock
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import androidx.fragment.app.FragmentHostCallback
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.evirgenoguz.fittimer.MainActivity
 import com.evirgenoguz.fittimer.R
+import com.evirgenoguz.fittimer.TimerService
 import com.evirgenoguz.fittimer.adapters.ModeAdapter
 import com.evirgenoguz.fittimer.data.ModeDb
 import com.evirgenoguz.fittimer.databinding.FragmentStopwatchBinding
 import com.evirgenoguz.fittimer.models.ModeModel
+import java.util.*
+import kotlin.math.roundToInt
 
 class StopwatchFragment : Fragment() {
 
@@ -20,6 +30,9 @@ class StopwatchFragment : Fragment() {
 
     private lateinit var adapter: ModeAdapter
     private val modeAdapter by lazy { ModeAdapter() }
+    private var timerStarted = false
+    private lateinit var serviceIntent: Intent
+    private var time = 0.0
 
 
     override fun onCreateView(
@@ -47,17 +60,41 @@ class StopwatchFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.startButton.setOnClickListener {
-            StartStopwatch()
+            startStopwatch()
         }
 
         binding.pauseButton.setOnClickListener {
-            StopStopwatch()
+            stopStopwatch()
         }
 
         binding.resetButton.setOnClickListener {
-            ResetStopwatch()
+            resetStopwatch()
         }
 
+        serviceIntent  = Intent(context, TimerService::class.java)
+        requireActivity().registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
+
+
+        binding.apply {
+            openModeButton.setOnClickListener{
+                (modeRecyclerView.layoutParams as LinearLayout.LayoutParams).weight = 0.5F
+                (firstBlockStopWatchFragment.layoutParams as LinearLayout.LayoutParams).weight = 0.3F
+                (thirdBlockStopWatchFragment.layoutParams as LinearLayout.LayoutParams).weight = 0.2F
+                modeRecyclerView.visibility = View.VISIBLE
+                openModeButton.visibility = View.GONE
+                closeModeButton.visibility = View.VISIBLE
+            }
+
+            closeModeButton.setOnClickListener {
+                (modeRecyclerView.layoutParams as LinearLayout.LayoutParams).weight = 0.0F
+                (firstBlockStopWatchFragment.layoutParams as LinearLayout.LayoutParams).weight = 0.8F
+                (thirdBlockStopWatchFragment.layoutParams as LinearLayout.LayoutParams).weight = 0.2F
+                modeRecyclerView.visibility = View.GONE
+                closeModeButton.visibility = View.GONE
+                openModeButton.visibility = View.VISIBLE
+            }
+
+        }
 
     }
 
@@ -66,10 +103,31 @@ class StopwatchFragment : Fragment() {
         _binding = null
     }
 
-    private fun StartStopwatch() {
+    private val updateTime: BroadcastReceiver = object : BroadcastReceiver(){
+
+        override fun onReceive(context: Context?, intent: Intent?) {
+            time = intent!!.getDoubleExtra(TimerService.TIME_EXTRA, 0.0)
+            binding.timeTv.text = getTimeStringFromDouble(time)
+
+        }
+
+    }
+
+    private fun getTimeStringFromDouble(time: Double): String{
+        val resultInt = time.roundToInt()
+        val hours = resultInt % 86400 / 3600
+        val minutes = resultInt % 86400 % 3600 / 60
+        val seconds = resultInt % 86400 % 3600 % 60
+
+        return makeTimeString(hours, minutes, seconds)
+    }
+
+    private fun makeTimeString(hour: Int, minute: Int, second: Int): String = String.format("%02d:%02d:%02d", hour, minute, second)
+
+    private fun startStopwatch() {
         //Start Stopwatch
-        binding.stopwatch.base = SystemClock.elapsedRealtime()
-        binding.stopwatch.start()
+        serviceIntent.putExtra(TimerService.TIME_EXTRA, time)
+        requireActivity().startService(serviceIntent)
 
         //Invis Start Button
         binding.startButton.visibility = View.GONE
@@ -78,9 +136,10 @@ class StopwatchFragment : Fragment() {
         binding.pauseButton.visibility = View.VISIBLE
     }
 
-    private fun StopStopwatch() {
+    private fun stopStopwatch() {
         //Stop Stopwatch
-        binding.stopwatch.stop()
+        requireActivity().stopService(serviceIntent)
+
 
         //Invis Pause button
         binding.pauseButton.visibility = View.GONE
@@ -89,12 +148,14 @@ class StopwatchFragment : Fragment() {
         binding.startButton.visibility = View.VISIBLE
     }
 
-    private fun ResetStopwatch(){
+    private fun resetStopwatch(){
         //Set chronometer at 0
-        binding.stopwatch.base = SystemClock.elapsedRealtime()
+        stopStopwatch()
 
+        time = 0.0
+        binding.timeTv.text = getTimeStringFromDouble(time)
         //Stop Stopwatch
-        binding.stopwatch.stop()
+
 
         //Invis Pause button
         binding.pauseButton.visibility = View.GONE
